@@ -10,14 +10,12 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		//最简单的执行，一个一个的分配，直接按照延时最小的拿，不够的再去第二小的补
-
-		File demand = new File("data/demand.csv");
-		File site_bandwidth = new File("data/site_bandwidth.csv");
-		File qos = new File("data/qos.csv");
-		File config = new File("data/config.ini");
+		//平均分配策略
+		File demand = new File("data2/demand.csv");
+		File site_bandwidth = new File("data2/site_bandwidth.csv");
+		File qos = new File("data2/qos.csv");
+		File config = new File("data2/config.ini");
 		List<ClientNode> clientNodeList = new ArrayList<>();
-
 
 		//String[] clientName = new String[35];
 		try{
@@ -59,9 +57,6 @@ public class Main {
 				edgeIndex++;
 				edgeNodes.add(node);
 			}
-
-
-
 
 			//读入文件处理
 			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("output/solution.txt")); //输出流
@@ -107,25 +102,23 @@ public class Main {
 					List<Integer> allocation =  new ArrayList<>();
 					StringBuilder sb = new StringBuilder();
 					sb.append(clientName[i + 1]).append(":");
-					for(int j=0;j<edgeNodes.size();j++){
+					for(int j = 0;j < edgeNodes.size(); j++){
 						EdgeNode temp = edgeNodes.get(j);
 						EdgeNode copy = edgeNodes_copy.get(j);
-						int num = copy.getRemain_bandwidth()-temp.getRemain_bandwidth();
+						int num = copy.getRemain_bandwidth() - temp.getRemain_bandwidth();
 						allocation.add(num);
 						if(num != 0){
 							sb.append("<").append(edgeNodes.get(j).getName()).append(",").append(num).append(">").append(",");
 						}
 					}
-					sb.deleteCharAt(sb.length() - 1);
+					if(sb.charAt(sb.length() - 1) == ','){
+						sb.deleteCharAt(sb.length() - 1); //删除多余的,
+					}
 					if(colIndex != 0) {
 						bufferedWriter.write("\r\n");
 					}
 					bufferedWriter.write(String.valueOf(sb));
 					colIndex++;
-
-//					System.out.println(sb.toString());
-
-//					System.out.println("!");
 				}
 				//处理完这一时刻的分配 将所有edges 的状态回复为起始状态
 				for(int i=0;i<edgeNodes.size();i++){
