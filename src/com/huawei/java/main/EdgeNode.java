@@ -1,8 +1,5 @@
 package com.huawei.java.main;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
 
 public class EdgeNode {
     private String name; //边缘节点的名字
@@ -15,7 +12,12 @@ public class EdgeNode {
         this.name = name;
         this.max_bandwidth = max_bandwidth;
         this.remain_bandwidth = max_bandwidth;
+    }
 
+    public EdgeNode(String name, int max_bandwidth, int remain_bandwidth){
+        this.name = name;
+        this.max_bandwidth = max_bandwidth;
+        this.remain_bandwidth = remain_bandwidth;
     }
 
 

@@ -60,6 +60,7 @@ public class Main {
 
 
 			//读入文件处理
+			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("output/solution.txt")); //输出流
 			BufferedReader demandFile = new BufferedReader(new FileReader(demand));
 			String demandData = "";
 			demandData = demandFile.readLine();
@@ -69,7 +70,10 @@ public class Main {
 				//挨个处理每个client的请求量
 				for(int i=0;i<clientNodeList.size();i++){
 					//复制一份edgeNode 作为 分配前的参照
-					List<EdgeNode> edgeNodes_copy = new ArrayList<>(edgeNodes);
+					List<EdgeNode> edgeNodes_copy = new ArrayList<>(); //引用传递 都被改了
+					for(EdgeNode node : edgeNodes){
+						edgeNodes_copy.add(new EdgeNode(node.getName(), node.getMax_bandwidth(), node.getRemain_bandwidth()));
+					}
 					//获取这个client能够达到的边缘节点
 					int edgeNum = clientNodeList.get(i).edgeList.size();
 					int needNum = Integer.parseInt(demandNum[i+1]);
@@ -96,21 +100,30 @@ public class Main {
 					}
 					//TODO 记录当前cliallocation = {ArrayList@541}  size = 100ent的分配    把所有的分配情况拼接成答案
 					List<Integer> allocation =  new ArrayList<>();
+					StringBuilder sb = new StringBuilder();
+					sb.append(clientName[i + 1]).append(":");
 					for(int j=0;j<edgeNodes.size();j++){
 						EdgeNode temp = edgeNodes.get(j);
 						EdgeNode copy = edgeNodes_copy.get(j);
 						int num = copy.getRemain_bandwidth()-temp.getRemain_bandwidth();
 						allocation.add(num);
+						if(num != 0){
+							sb.append("<").append(edgeNodes.get(j).getName()).append(",").append(num).append(">").append(",");
+						}
 					}
+					sb.deleteCharAt(sb.length() - 1);
+					bufferedWriter.write(String.valueOf(sb));
+					bufferedWriter.write("\r\n");
+//					System.out.println(sb.toString());
 
-					System.out.println("!");
-
+//					System.out.println("!");
 				}
 				//处理完这一时刻的分配 将所有edges 的状态回复为起始状态
 				for(int i=0;i<edgeNodes.size();i++){
 					edgeNodes.get(i).setRemain_bandwidth(edgeNodes.get(i).getMax_bandwidth());
 				}
 			}
+			bufferedWriter.close();
 		}catch (FileNotFoundException e){
 			System.out.println("Not found the file");
 		} catch (IOException e) {
