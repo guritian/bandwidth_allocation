@@ -15,19 +15,23 @@ public class Main {
 		File demand = new File("data/demand.csv");
 		File site_bandwidth = new File("data/site_bandwidth.csv");
 		File qos = new File("data/qos.csv");
-
+		File config = new File("data/config.ini");
 		List<ClientNode> clientNodeList = new ArrayList<>();
 
 
 		//String[] clientName = new String[35];
 		try{
 			BufferedReader siteFile = new BufferedReader(new FileReader(site_bandwidth));
+			BufferedReader configFile = new BufferedReader(new FileReader(config));
 			BufferedReader qosFile = new BufferedReader(new FileReader(qos));
 			String siteData = "";
 			String qosData = "";
 
 			//TODO 从配置文件中获取
-			int qos_constraint  = 400;
+			configFile.readLine();
+			String configString = configFile.readLine();
+			configString =  configString.substring(15,configString.length());
+			int qos_constraint  = Integer.parseInt(configString);
 
 			List<EdgeNode> edgeNodes = new ArrayList<>();  //保存所有的边缘节点
 			siteData = siteFile.readLine();  //忽略第一行
@@ -65,6 +69,7 @@ public class Main {
 			String demandData = "";
 			demandData = demandFile.readLine();
 			//clientName = demandData.split(",");
+			int colIndex = 0;
 			while ((demandData = demandFile.readLine()) != null){
 				String[] demandNum = demandData.split(",");
 				//挨个处理每个client的请求量
@@ -85,7 +90,7 @@ public class Main {
 						//为能装下 平摊量的边缘节点
 						for(int j =0;j<edgeList.size();j++){
 							EdgeNode temp = edgeNodes.get(edgeList.get(j));
-							if(temp.getRemain_bandwidth()>currentAllocation){
+ 							if(temp.getRemain_bandwidth()>currentAllocation){
 								temp.setRemain_bandwidth(temp.getRemain_bandwidth()-currentAllocation);
 								needNum -= currentAllocation;
 								if(flag){
@@ -112,8 +117,12 @@ public class Main {
 						}
 					}
 					sb.deleteCharAt(sb.length() - 1);
+					if(colIndex != 0) {
+						bufferedWriter.write("\r\n");
+					}
 					bufferedWriter.write(String.valueOf(sb));
-					bufferedWriter.write("\r\n");
+					colIndex++;
+
 //					System.out.println(sb.toString());
 
 //					System.out.println("!");
@@ -122,6 +131,7 @@ public class Main {
 				for(int i=0;i<edgeNodes.size();i++){
 					edgeNodes.get(i).setRemain_bandwidth(edgeNodes.get(i).getMax_bandwidth());
 				}
+
 			}
 			bufferedWriter.close();
 		}catch (FileNotFoundException e){
