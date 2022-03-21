@@ -1,28 +1,24 @@
 package com.huawei.java.main;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class EdgeNode {
     private String name; //边缘节点的名字
     private int max_bandwidth; //最大带宽值
     private int remain_bandwidth;  //剩余可用带宽值
-    private PriorityQueue<Node> queue;  //保存到每个client的延时
+
+
 
     public EdgeNode(String name, int max_bandwidth){
         this.name = name;
         this.max_bandwidth = max_bandwidth;
         this.remain_bandwidth = max_bandwidth;
-        this.queue = new PriorityQueue<>();
+
     }
 
-    public PriorityQueue<Node> getQueue() {
-        return queue;
-    }
 
-    public void setQueue(PriorityQueue<Node> queue) {
-        this.queue = queue;
-    }
 
     public String getName() {
         return name;

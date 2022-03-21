@@ -16,6 +16,9 @@ public class Main {
 		File site_bandwidth = new File("data/site_bandwidth.csv");
 		File qos = new File("data/qos.csv");
 
+		List<ClientNode> clientNodeList = new ArrayList<>();
+
+
 		//String[] clientName = new String[35];
 		try{
 			BufferedReader siteFile = new BufferedReader(new FileReader(site_bandwidth));
@@ -23,32 +26,90 @@ public class Main {
 			String siteData = "";
 			String qosData = "";
 
+			//TODO 从配置文件中获取
+			int qos_constraint  = 400;
+
 			List<EdgeNode> edgeNodes = new ArrayList<>();  //保存所有的边缘节点
 			siteData = siteFile.readLine();  //忽略第一行
 			qosData = qosFile.readLine();
 			String[] clientName = qosData.split(","); //clientName
+			for(int i = 1;i<clientName.length;i++){
+				ClientNode clientNode = new ClientNode(clientName[i],new ArrayList<>());
+				clientNodeList.add(clientNode);
+			}
+
+			int edgeIndex = 0;
 			//先初始化边缘节点
 			while ((siteData = siteFile.readLine()) != null && (qosData = qosFile.readLine()) != null){
 				String[] str1 = siteData.split(",");
 				String[] str2 = qosData.split(",");
 				EdgeNode node = new EdgeNode(str1[0], Integer.parseInt(str1[1]));
-				PriorityQueue<Node> queue = new PriorityQueue<>((o1, o2) -> o1.getDelay() - o2.getDelay());
-				int index = 1;
-				while(index < clientName.length){
-					queue.offer(new Node(clientName[index], Integer.parseInt(str2[index])));
-					index++;
+
+
+				for(int i = 1;i<str2.length;i++){
+					int qos_num = Integer.parseInt(str2[i]);
+					if(qos_num <= qos_constraint){
+						clientNodeList.get(i-1).edgeList.add(edgeIndex);
+					}
 				}
-				node.setQueue(queue);
+				edgeIndex++;
 				edgeNodes.add(node);
 			}
+
+
+
 
 			//读入文件处理
 			BufferedReader demandFile = new BufferedReader(new FileReader(demand));
 			String demandData = "";
 			demandData = demandFile.readLine();
-			clientName = demandData.split(",");
+			//clientName = demandData.split(",");
 			while ((demandData = demandFile.readLine()) != null){
+				String[] demandNum = demandData.split(",");
+				//挨个处理每个client的请求量
+				for(int i=0;i<clientNodeList.size();i++){
+					//复制一份edgeNode 作为 分配前的参照
+					List<EdgeNode> edgeNodes_copy = new ArrayList<>(edgeNodes);
+					//获取这个client能够达到的边缘节点
+					int edgeNum = clientNodeList.get(i).edgeList.size();
+					int needNum = Integer.parseInt(demandNum[i+1]);
+					while(needNum>0){
+						boolean flag = true;
+						int currentAllocation = needNum/edgeNum;
+						int yu = needNum%edgeNum;
+						List<Integer> edgeList = clientNodeList.get(i).edgeList;
+						//为能装下 平摊量的边缘节点
+						for(int j =0;j<edgeList.size();j++){
+							EdgeNode temp = edgeNodes.get(edgeList.get(j));
+							if(temp.getRemain_bandwidth()>currentAllocation){
+								temp.setRemain_bandwidth(temp.getRemain_bandwidth()-currentAllocation);
+								needNum -= currentAllocation;
+								if(flag){
+									if(temp.getRemain_bandwidth()>yu){
+										temp.setRemain_bandwidth(temp.getRemain_bandwidth()-yu);
+										needNum -= yu;
+										flag = false;
+									}
+								}
+							}
+						}
+					}
+					//TODO 记录当前cliallocation = {ArrayList@541}  size = 100ent的分配    把所有的分配情况拼接成答案
+					List<Integer> allocation =  new ArrayList<>();
+					for(int j=0;j<edgeNodes.size();j++){
+						EdgeNode temp = edgeNodes.get(j);
+						EdgeNode copy = edgeNodes_copy.get(j);
+						int num = copy.getRemain_bandwidth()-temp.getRemain_bandwidth();
+						allocation.add(num);
+					}
 
+					System.out.println("!");
+
+				}
+				//处理完这一时刻的分配 将所有edges 的状态回复为起始状态
+				for(int i=0;i<edgeNodes.size();i++){
+					edgeNodes.get(i).setRemain_bandwidth(edgeNodes.get(i).getMax_bandwidth());
+				}
 			}
 		}catch (FileNotFoundException e){
 			System.out.println("Not found the file");
