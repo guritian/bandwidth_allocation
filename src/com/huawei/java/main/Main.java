@@ -57,7 +57,7 @@ public class Main {
 
 				for(int i = 1;i<str2.length;i++){
 					int qos_num = Integer.parseInt(str2[i]);
-					if(qos_num <= qos_constraint){
+					if(qos_num < qos_constraint){
 						clientNodeList.get(i-1).edgeList.add(edgeIndex);
 					}
 				}
