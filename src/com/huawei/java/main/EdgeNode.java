@@ -1,10 +1,13 @@
 package com.huawei.java.main;
 
 
+import java.util.List;
+
 public class EdgeNode {
     private String name; //边缘节点的名字
     private int max_bandwidth; //最大带宽值
     private int remain_bandwidth;  //剩余可用带宽值
+
 
 
 
