@@ -114,7 +114,7 @@ public class Main {
 						//重新计算可以分配请求的节点数量
 						edgeNum = 0;
 						for(Integer nodeIndex:edgeList){
-							if(edgeNodes_copy.get(nodeIndex).getRemain_bandwidth()>0){
+							if(edgeNodes.get(nodeIndex).getRemain_bandwidth()>0){
 								edgeNum++;
 							}
 						}
