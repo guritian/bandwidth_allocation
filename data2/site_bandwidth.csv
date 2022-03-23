@@ -1,4 +1,4 @@
 site_name,bandwidth
-S1,81920
-SB,87040
-SD,74586
+S1,10000
+SB,10000
+SD,10000
