@@ -30,4 +30,16 @@ public class Util {
         }
         return null;
     }
+
+
+    public int getEdgeAllocationNum(List<List<Integer>> client_allocation,int edgeIndex) {
+        int sum = 0;
+        for(int i=0;i<client_allocation.size();i++){
+            sum += client_allocation.get(i).get(edgeIndex);
+        }
+        return sum;
+    }
+
+
+
 }

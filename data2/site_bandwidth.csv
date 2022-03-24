@@ -1,4 +1,4 @@
 site_name,bandwidth
-S1,10000
-SB,10000
-SD,10000
+S1,1000
+SB,1000
+SD,1000
