@@ -2,17 +2,20 @@ package com.huawei.java.main;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Main1 {
 
 	public static void main(String[] args) {
 
+		Util util = new Util();
+
 		//平均分配策略
-		File demand = new File("/data/demand.csv");
-		File site_bandwidth = new File("/data/site_bandwidth.csv");
-		File qos = new File("/data/qos.csv");
-		File config = new File("/data/config.ini");
+		File demand = new File("data/demand.csv");
+		File site_bandwidth = new File("data/site_bandwidth.csv");
+		File qos = new File("data/qos.csv");
+		File config = new File("data/config.ini");
 		List<ClientNode> clientNodeList = new ArrayList<>();
 		List<List<Integer>> allocationList = new ArrayList<>();
 
@@ -64,7 +67,9 @@ public class Main1 {
 						node.client_list.add(i-1);
 					}
 				}
+				node.index = edgeIndex;
 				edgeIndex++;
+
 				edgeNodes.add(node);
 				times.add(Math.max((int) (T * 0.05 - 1), 0));
 				used.add(false);
@@ -76,7 +81,7 @@ public class Main1 {
 
 
 			//读入文件处理
-			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("/output/solution.txt")); //输出流
+			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("output/solution.txt")); //输出流
 			demandFile = new BufferedReader(new FileReader(demand));
 			String demandData = "";
 			demandData = demandFile.readLine();
@@ -84,52 +89,69 @@ public class Main1 {
 			int colIndex = 0;
 			while ((demandData = demandFile.readLine()) != null){
 				String[] demandNum = demandData.split(",");
+				//边缘节点 按照入度进行排序
+				edgeNodes.sort((node1, node2) -> {
+					return node2.client_list.size() - node1.client_list.size();
+				});
+
+				//复制一份edgeNode 作为 分配前的参照
+				List<EdgeNode> edgeNodes_copy = new ArrayList<>();
+				for(EdgeNode node : edgeNodes){
+					edgeNodes_copy.add(new EdgeNode(node.getName(), node.getMax_bandwidth(), node.getRemain_bandwidth()));
+				}
+
+				int totalNeed = util.getTotalNeed(demandNum);
 				//每个边缘节点  在耗尽自己的寿命之前 尽量贪心
 				for(int i = 0;i<edgeNodes.size();i++){
+					if(totalNeed==0)
+						break;
+					int edge_index = edgeNodes.get(i).index;
+					EdgeNode temp = edgeNodes.get(edge_index);
 
-					List<Integer> clientList = edgeNodes.get(i).client_list;
-					for(Integer clientIndex:clientList){
-
+					if(times.get(edge_index)>0){
+						List<Integer> clientList = temp.client_list;
+						for(Integer clientIndex:clientList){
+							 if(temp.getRemain_bandwidth()==0)
+								 break;
+							 int num = Integer.parseInt(demandNum[clientIndex+1]);
+							 if(num>0){
+								 if(num<temp.getRemain_bandwidth()){
+									 totalNeed -= num;
+									 temp.setRemain_bandwidth(temp.getRemain_bandwidth()-num);
+									 demandNum[clientIndex+1] = String.valueOf(0);
+								 }else{
+									 totalNeed -= temp.getRemain_bandwidth();
+									 demandNum[clientIndex+1] = String.valueOf(num - temp.getRemain_bandwidth());
+									 temp.setRemain_bandwidth(0);
+								 }
+							 }
+						}
+						//TODO  目前假设 参与了这个贪的过程 就算使用一次寿命
+						used.set(temp.index,true);
 					}
+
 				}
 
 				//挨个处理每个client的请求量
 				for(int i=0;i<clientNodeList.size();i++){
 					//复制一份edgeNode 作为 分配前的参照
-					List<EdgeNode> edgeNodes_copy = new ArrayList<>();
+					//List<EdgeNode> edgeNodes_copy = new ArrayList<>();
 					List<Integer> edgeList = clientNodeList.get(i).edgeList;
-					for(EdgeNode node : edgeNodes){
-						edgeNodes_copy.add(new EdgeNode(node.getName(), node.getMax_bandwidth(), node.getRemain_bandwidth()));
-					}
+//					for(EdgeNode node : edgeNodes){
+//						edgeNodes_copy.add(new EdgeNode(node.getName(), node.getMax_bandwidth(), node.getRemain_bandwidth()));
+//					}
 					//获取这个client能够达到的边缘节点
 					int edgeNum = edgeList.size();
 					int needNum = Integer.parseInt(demandNum[i+1]);
-					//先尽量往一个里边放
-					for(int j = 0;j < edgeList.size(); j++){
-						EdgeNode temp = edgeNodes.get(edgeList.get(j));
-						while(needNum > 0 && times.get(edgeList.get(j)) > 0 && temp.getRemain_bandwidth() > 0){
-							if(temp.getRemain_bandwidth() > needNum){
-								temp.setRemain_bandwidth(temp.getRemain_bandwidth() - needNum);
-								needNum = 0;
-								used.set(edgeList.get(j), true);
-//								if(needNum > temp.getMax_bandwidth() * 0.85){
-//
-//								}
-							}
-							else {
-								needNum -= temp.getRemain_bandwidth();
-								temp.setRemain_bandwidth(0);
-								used.set(edgeList.get(j), true);
-							}
-						}
-						if(needNum == 0) break;
-					}
+
+
 					while(needNum>0){
 						boolean flag = true;
 						//重新计算可以分配请求的节点数量
 						edgeNum = 0;
 						for(Integer nodeIndex:edgeList){
-							if(edgeNodes.get(nodeIndex).getRemain_bandwidth()>0){
+							EdgeNode temp = util.getEdgeNode(edgeNodes,nodeIndex);
+							if(temp.getRemain_bandwidth()>0){
 								edgeNum++;
 							}
 						}
@@ -138,7 +160,7 @@ public class Main1 {
 						int yu = needNum%edgeNum;
 						//为能装下 平摊量的边缘节点
 						for(int j =0;j<edgeList.size();j++){
-							EdgeNode temp = edgeNodes.get(edgeList.get(j));
+							EdgeNode temp = util.getEdgeNode(edgeNodes,edgeList.get(j)) ;
  							if(temp.getRemain_bandwidth()>currentAllocation){
 								temp.setRemain_bandwidth(temp.getRemain_bandwidth()-currentAllocation);
 								needNum -= currentAllocation;
@@ -203,7 +225,7 @@ public class Main1 {
 		} catch (IOException e) {
 			System.out.println("文件读写出错");
 		}
-		Util util = new Util();
+
 		System.out.println(util.getScore(allocationList));
 	}
 }

@@ -13,4 +13,21 @@ public class Util {
         }
         return res;
     }
+
+    public int getTotalNeed(String[] demandNum){
+        int num = 0;
+        for(int i=1;i<demandNum.length;i++){
+            num += Integer.parseInt(demandNum[i]);
+        }
+        return num;
+    }
+
+    public EdgeNode getEdgeNode(List<EdgeNode> list,int index){
+        for(EdgeNode temp : list){
+            if(temp.index == index){
+                return temp;
+            }
+        }
+        return null;
+    }
 }
