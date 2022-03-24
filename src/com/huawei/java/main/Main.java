@@ -34,9 +34,19 @@ public class Main {
 
 			//读取时刻总数
 			int T = 0;
+			List<String> demandList = new ArrayList<>();
 			BufferedReader demandFile = new BufferedReader(new FileReader(demand));
 			demandFile.readLine();
-			while(demandFile.readLine() != null) T++;
+			String s = "";
+			while((s = demandFile.readLine()) != null) {
+				demandList.add(s);
+				T++;
+			}
+			demandList.sort((string1,string2)->{
+				String[]  str1 = string1.split(",");
+				String[]  str2 = string2.split(",");
+				return util.getTotalNeed(str2) - util.getTotalNeed(str1);
+			});
 			demandFile.close();
 			List<Integer> times = new ArrayList<>();  //保存各个边缘节点可以放最大值的数量
 			List<Boolean> used = new ArrayList<>(); //保存本次节点是否被使用
@@ -85,12 +95,12 @@ public class Main {
 
 			//读入文件处理
 			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("/output/solution.txt")); //输出流
-			demandFile = new BufferedReader(new FileReader(demand));
-			String demandData = "";
-			demandData = demandFile.readLine();
+//			demandFile = new BufferedReader(new FileReader(demand));
+//			String demandData = "";
+//			demandData = demandFile.readLine();
 			//clientName = demandData.split(",");
 			int colIndex = 0;
-			while ((demandData = demandFile.readLine()) != null){
+			for(String demandData : demandList){
 				String[] demandNum = demandData.split(",");
 				//边缘节点 按照入度进行排序
 				List<Integer> allocation  = new ArrayList<>();
